@@ -1,56 +1,87 @@
-import numpy as np
-import pandas as pd
+
 import streamlit as st
-#from pandas_profiling import ProfileReport
-from ydata_profiling import ProfileReport
-from streamlit_pandas_profiling import st_profile_report
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import plotly.express as px
+
+st.set_page_config(page_title="Data Analysis", page_icon=":bar_chart:", layout="wide")
+
+st.title("Data Analysis :bar_chart:")
+st.markdown("##")
+upload = st.file_uploader("Upload Your Dataset (In CSV Format)")
+
+if upload is not None:
+    data = pd.read_csv(upload)
 
 
-st.set_page_config(page_title="EDA APP", page_icon=":bar_chart:", layout="wide")
+if upload is not None:
+    if st.checkbox("Preview Dataset"):
+        if st.button("Head"):
+            st.write(data.head())
+        if st.button("Tail"):
+            st.write(data.tail())
+if upload is not None:
+     if st.checkbox("DataType of Each Column"):
+        st.text("DataTypes")
+        st.write(data.dtypes)
 
-# Web App Title
-st.title("Exploratory Data Analysis :bar_chart:")
-st.subheader(''':link: [Prem Kumar](https://prembhargav.netlify.app/)      :bow_and_arrow: [GitHub](https://github.com/Premkumar9799817360)''')
+if upload is not None:
+    data_shape = st.radio("what Dimension Do You Want To Check?",('Rows','Columns'))
 
-# Upload CSV data
+    if data_shape=="Rows":
+        st.text("Number of Rows")
+        st.write(data.shape[0])
+    if data_shape=="Columns":
+        st.text("Number of Columns")
+        st.write(data.shape[1])
 
-with st.sidebar.header('1. Upload your CSV data :file_folder:'):
-    uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
-    st.sidebar.subheader("About :technologist:")
-    st.sidebar.text("This project aims to automatically\nperform advanced exploratory data\nanalysis (EDA) of any dataset using\nthe Pandas profiling library.\nThis app provides insights from an\nExploratory Data Analysis project.\nThe goal of the project was to\nanalyze a dataset, uncover patterns,\nrelationships, anomalies, present\nthe findings in an easy-to-understand\nmanner.")
+if upload is not None:
+    selected_columns = st.selectbox("Select columns for count of the total number of values in Specific Columns  ", data.columns)
+    if selected_columns:
+        selected_df = data[selected_columns]
+        value_counts = selected_df.value_counts()
+        st.write(value_counts)
 
 
-# Pandas Profiling Report
-if uploaded_file is not None:
-    @st.cache_data
-    def load_csv():
-        csv = pd.read_csv(uploaded_file)
-        return csv
-    df = load_csv()
-    pr = ProfileReport(df, explorative=True)
-    st.header('**Input DataFrame**')
-    st.write(df)
-    st.write('---')
-    st.header('**Pandas Profiling Report**')
-    st_profile_report(pr)
-else:
-    st.info('Awaiting for CSV file to be uploaded.')
-    if st.button('Press to use Example Dataset'):
-        # Example data
-        @st.cache_data
-        def load_data():
-            a = pd.DataFrame(
-                np.random.rand(100, 5),
-                columns=['a', 'b', 'c', 'd', 'e']
-            )
-            return a
-        df = load_data()
-        pr = ProfileReport(df, explorative=True)
-        st.header('**Input DataFrame**')
-        st.write(df)
-        st.write('---')
-        st.header('**Pandas Profiling Report**')
-        st_profile_report(pr)
+if upload is not None:
+    test = data.isnull().values.any()
+    st.write("Total Null value of Particular columns ")
+    st.write(data.isnull().sum())
+    st.text("Total Null Values in Dataset")
+    st.write(data.isnull().sum().sum())
+    if test == True:
+        if st.checkbox("Null Values in the dataset"):
+            fig, ax = plt.subplots()
+            sns.heatmap(data.isnull())
+            st.pyplot(fig)
+    else:
+        st.success("No Null OR Missing Values")
+
+if upload is not None:
+    test = data.duplicated().any()
+    if test== True:
+        st.warning("This Dataset Contains Some Duplicate Values")
+        dup = st.selectbox("Do You Want to Remove Duplicate Values?",("Select One","Yes","No"))
+        if dup=="Yes":
+            data = data.drop_duplicates()
+            st.text("Duplicate Values are Removed")
+        if dup=="No":
+                st.text("Ok No Problem")
+if upload is not None:
+    if st.checkbox("Summary of The Dataset"):
+        st.write(data.describe(include="all"))
+
+
+    selected_column = st.selectbox("Select columns for data visualization(show Top)", data.columns)
+
+    category_mean = data[selected_column].value_counts().head(10)
+    fig, ax = plt.subplots()
+    category_mean.plot(kind='bar')
+    st.pyplot(fig)
+
+#
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
